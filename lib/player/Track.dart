@@ -43,4 +43,6 @@ class Track {
     await _player.seek(milliseconds / 1000.0);
     _position = new Duration(milliseconds: milliseconds);
   }
+
+  Future<void> mute(bool muted) => _player.mute(muted);
 }

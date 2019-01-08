@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stems/player/StemsPlayer.dart';
+import 'package:stems/player/Track.dart';
 import 'package:stems/ui/TrackWidget.dart';
 
 class _PlayerButton extends StatelessWidget {
@@ -35,21 +36,35 @@ class _PlayerControls extends StatelessWidget {
   }
 }
 
-class PlayerWidget extends StatelessWidget {
-  final StemsPlayer stemsPlayer;
+class PlayerWidget extends StatefulWidget {
+  @override
+  PlayerWidgetState createState() {
+    return new PlayerWidgetState();
+  }
+}
 
-  PlayerWidget(this.stemsPlayer, {Key key}) : super(key: key);
+class PlayerWidgetState extends State<PlayerWidget> {
+  final StemsPlayer stemsPlayer =
+      StemsPlayer([Track(title: 'Drums', source: '1_drums.mp3')]);
+
+  @override
+  void dispose() {
+    stemsPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        color: Colors.deepPurple[200],
-        child: Column(children: [
-          Expanded(
-              child: ListView(
-            children: stemsPlayer.tracks.map((t) => TrackWidget(t)).toList(),
-          )),
-          _PlayerControls()
-        ]));
+    return Material(
+        child: Container(
+            color: Colors.deepPurple[200],
+            child: Column(children: [
+              Expanded(
+                  child: ListView(
+                children:
+                    stemsPlayer.tracks.map((t) => TrackWidget(t)).toList(),
+              )),
+              _PlayerControls()
+            ])));
   }
 }
