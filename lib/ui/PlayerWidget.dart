@@ -26,13 +26,10 @@ class _PlayerButton extends StatelessWidget {
 }
 
 class _PlayerControls extends StatefulWidget {
-  final Function onTapBack;
-  final Function onTapPlay;
-  final Function onTapStop;
-  var status = PlayerState.STOPPED;
+  final void Function() onSkipBack;
+  final void Function(PlayerState) onStatusChanged;
 
-  _PlayerControls(
-      {this.onTapBack, this.onTapPlay, this.onTapStop, this.status});
+  _PlayerControls({this.onSkipBack, this.onStatusChanged});
 
   @override
   _PlayerControlsState createState() {
@@ -41,6 +38,33 @@ class _PlayerControls extends StatefulWidget {
 }
 
 class _PlayerControlsState extends State<_PlayerControls> {
+  var _status = PlayerState.STOPPED;
+
+  void onTapPlay() async {
+    PlayerState newStatus;
+    if (_status == PlayerState.PLAYING) {
+      newStatus = PlayerState.PAUSED;
+      widget.onStatusChanged(newStatus);
+    } else {
+      newStatus = PlayerState.PLAYING;
+      widget.onStatusChanged(newStatus);
+    }
+    setState(() {
+      _status = newStatus;
+    });
+  }
+
+  void onTapBack() async {
+    widget.onSkipBack();
+  }
+
+  void onTapStop() async {
+    widget.onStatusChanged(PlayerState.STOPPED);
+    setState(() {
+      _status = PlayerState.STOPPED;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -48,15 +72,15 @@ class _PlayerControlsState extends State<_PlayerControls> {
       child: Row(children: [
         _PlayerButton(
           Icons.skip_previous,
-          onPressed: widget.onTapBack,
+          onPressed: widget.onSkipBack,
         ),
         _PlayerButton(
           Icons.stop,
-          onPressed: widget.onTapStop,
+          onPressed: onTapStop,
         ),
         _PlayerButton(
-          widget.status == PlayerState.PLAYING ? Icons.pause : Icons.play_arrow,
-          onPressed: widget.onTapPlay,
+          _status == PlayerState.PLAYING ? Icons.pause : Icons.play_arrow,
+          onPressed: onTapPlay,
         ),
       ]),
     );
@@ -75,37 +99,43 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     Track(title: 'Drums', source: '1_drums.mp3'),
     Track(title: 'Bass', source: '2_bass.mp3'),
     Track(title: 'Guitar', source: '3_guitar.mp3'),
+    Track(title: 'Vocals', source: '4_vocals.mp3'),
+    Track(title: 'Additional', source: '5_additional_instruments.mp3'),
   ]);
 
   int _position = 0;
   var _status = PlayerState.STOPPED;
 
-  void onTapPlay() async {
-    PlayerState newStatus;
-    if (_status == PlayerState.PLAYING) {
-      newStatus = PlayerState.PAUSED;
-      await stemsPlayer.pause();
-    } else {
-      newStatus = PlayerState.PLAYING;
-      await stemsPlayer.play();
+  void _onPositionChanged(int position) {
+    setState(() {
+      _position = position;
+    });
+  }
+
+  void _onStatusChanged(PlayerState newStatus) async {
+    switch (newStatus) {
+      case PlayerState.PLAYING:
+        await stemsPlayer.play();
+        break;
+      case PlayerState.PAUSED:
+        await stemsPlayer.pause();
+        break;
+      default:
+        await stemsPlayer.stop();
     }
     setState(() {
       _status = newStatus;
     });
   }
 
-  void onTapBack() async {
+  void _onSkipBack() async {
     await stemsPlayer.seek(0);
   }
 
-  void onTapStop() async {
-    await stemsPlayer.stop();
-  }
-
-  void onPositionChanged(int position) {
-    setState(() {
-      _position = position;
-    });
+  @override
+  void initState() {
+    super.initState();
+    stemsPlayer.onPositionChanged = _onPositionChanged;
   }
 
   @override
@@ -120,9 +150,9 @@ class _PlayerWidgetState extends State<PlayerWidget> {
                     stemsPlayer.tracks.map((t) => TrackWidget(t)).toList(),
               )),
               _PlayerControls(
-                  onTapPlay: this.onTapPlay,
-                  onTapBack: this.onTapBack,
-                  onTapStop: this.onTapStop)
+                onStatusChanged: this._onStatusChanged,
+                onSkipBack: this._onSkipBack,
+              )
             ])));
   }
 }

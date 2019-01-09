@@ -15,27 +15,27 @@ class StemsPlayer {
   int get position => _position;
 
   final List<Track> tracks;
-  final void Function(int) onPositionChanged;
+  void Function(int) onPositionChanged;
 
   void _onPositionChanged(Duration position) {
     _position = position.inMilliseconds;
-    onPositionChanged(_position);
+    if (onPositionChanged != null) {
+      onPositionChanged(_position);
+    }
   }
 
   StemsPlayer(this.tracks, {this.onPositionChanged}) {
     if (tracks.length <= 0) {
       throw ('The player must be initialized with at least one track');
     }
-    if (onPositionChanged != null) {
-      tracks[0].player.positionHandler = _onPositionChanged;
-    }
+    tracks[0].player.positionHandler = _onPositionChanged;
   }
 
   Future<void> play() async {
     if (_status == PlayerState.STOPPED) {
       await Future.wait(tracks.map((t) => t.play()));
     } else {
-      await Future.wait(tracks.map((t) => t.resume()));
+      await Future.wait(tracks.map((t) => t.resumeAt(_position)));
     }
     _status = PlayerState.PLAYING;
   }
@@ -43,8 +43,6 @@ class StemsPlayer {
   Future<void> pause() async {
     _status = PlayerState.PAUSED;
     await Future.wait(tracks.map((t) => t.pause()));
-    // Sync position with first track
-    await Future.wait(tracks.map((t) => t.seek(position)));
   }
 
   Future<void> stop() async {

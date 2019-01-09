@@ -18,8 +18,10 @@ class Track {
     await _player.play(source);
   }
 
-  Future<void> resume() {
-    return _player.fixedPlayer.resume();
+  Future<void> resumeAt(int position) async {
+    // await _player.play(source);
+    await _player.fixedPlayer.seek(Duration(milliseconds: position));
+    await _player.fixedPlayer.resume();
   }
 
   Future<void> pause() async {
