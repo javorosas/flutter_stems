@@ -1,39 +1,59 @@
 import 'dart:async';
-import 'package:audioplayer/audioplayer.dart';
 import 'package:stems/player/Track.dart';
 
+enum PlayerState {
+  STOPPED,
+  PLAYING,
+  PAUSED,
+  COMPLETED,
+}
+
 class StemsPlayer {
-  var _state = AudioPlayerState.STOPPED;
-  get state => _state;
+  // not to be confused with widget's state
+  var _status = PlayerState.STOPPED;
+  int _position = 0;
+  int get position => _position;
 
   final List<Track> tracks;
-  final Function onPositionChanged;
+  final void Function(int) onPositionChanged;
+
+  void _onPositionChanged(Duration position) {
+    _position = position.inMilliseconds;
+    onPositionChanged(_position);
+  }
 
   StemsPlayer(this.tracks, {this.onPositionChanged}) {
-    if (this.tracks.length <= 0) {
+    if (tracks.length <= 0) {
       throw ('The player must be initialized with at least one track');
+    }
+    if (onPositionChanged != null) {
+      tracks[0].player.positionHandler = _onPositionChanged;
     }
   }
 
   Future<void> play() async {
-    await Future.wait(tracks.map((t) => t.play()));
-    _state = AudioPlayerState.PLAYING;
+    if (_status == PlayerState.STOPPED) {
+      await Future.wait(tracks.map((t) => t.play()));
+    } else {
+      await Future.wait(tracks.map((t) => t.resume()));
+    }
+    _status = PlayerState.PLAYING;
   }
 
   Future<void> pause() async {
+    _status = PlayerState.PAUSED;
     await Future.wait(tracks.map((t) => t.pause()));
     // Sync position with first track
-    final firstTrackPosition = tracks[0].position;
-    await Future.wait(tracks.map((t) => t.seek(firstTrackPosition)));
-    _state = AudioPlayerState.PAUSED;
+    await Future.wait(tracks.map((t) => t.seek(position)));
   }
 
   Future<void> stop() async {
     await Future.wait(tracks.map((t) => t.stop()));
-    _state = AudioPlayerState.STOPPED;
+    _status = PlayerState.STOPPED;
   }
 
-  Future<void> dispose() async {
-    await Future.wait(tracks.map((t) => t.dispose()));
+  Future<void> seek(int milliseconds) async {
+    await Future.wait(tracks.map((t) => t.seek(milliseconds)));
+    _status = PlayerState.STOPPED;
   }
 }
