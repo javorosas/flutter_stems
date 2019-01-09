@@ -19,10 +19,11 @@ class TrackWidgetState extends State<TrackWidget> {
   TrackWidgetState(Track track, {Key key}) : _track = track;
 
   void _toggleMute() async {
-    await _track.mute(_muted);
+    final newValue = !_muted;
     setState(() {
-      _muted = !_muted;
+      _muted = newValue;
     });
+    await _track.mute(newValue);
   }
 
   @override
@@ -30,7 +31,7 @@ class TrackWidgetState extends State<TrackWidget> {
     return Row(children: [
       Expanded(
           child: Opacity(
-        opacity: _muted ? 0.5 : 1.0,
+        opacity: _muted ? 0.3 : 1.0,
         child: GestureDetector(
           onTap: _toggleMute,
           child: Container(
