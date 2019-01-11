@@ -103,10 +103,10 @@ class _PlayerWidgetState extends State<PlayerWidget> {
     Track(title: 'Additional', source: '5_additional_instruments.mp3'),
   ]);
 
-  int _position = 0;
+  Duration _position = Duration(milliseconds: 0);
   var _status = PlayerState.STOPPED;
 
-  void _onPositionChanged(int position) {
+  void _onPositionChanged(Duration position) {
     setState(() {
       _position = position;
     });
@@ -129,7 +129,7 @@ class _PlayerWidgetState extends State<PlayerWidget> {
   }
 
   void _onSkipBack() async {
-    await stemsPlayer.seek(0);
+    await stemsPlayer.seek(Duration(milliseconds: 0));
   }
 
   @override

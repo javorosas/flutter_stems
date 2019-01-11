@@ -18,9 +18,7 @@ class Track {
     await _player.play(source);
   }
 
-  Future<void> resumeAt(int position) async {
-    // await _player.play(source);
-    await _player.fixedPlayer.seek(Duration(milliseconds: position));
+  Future<void> resume() async {
     await _player.fixedPlayer.resume();
   }
 
@@ -32,8 +30,8 @@ class Track {
     await _player.fixedPlayer.stop();
   }
 
-  Future<void> seek(int milliseconds) async {
-    await _player.fixedPlayer.seek(Duration(milliseconds: milliseconds));
+  Future<void> seek(Duration position) async {
+    await _player.fixedPlayer.seek(position);
   }
 
   Future<void> mute(bool muted) => _player.fixedPlayer.setVolume(muted ? 0 : 1);

@@ -11,14 +11,14 @@ enum PlayerState {
 class StemsPlayer {
   // not to be confused with widget's state
   var _status = PlayerState.STOPPED;
-  int _position = 0;
-  int get position => _position;
+  Duration _position = Duration(milliseconds: 0);
+  Duration get position => _position;
 
   final List<Track> tracks;
-  void Function(int) onPositionChanged;
+  void Function(Duration) onPositionChanged;
 
   void _onPositionChanged(Duration position) {
-    _position = position.inMilliseconds;
+    _position = position;
     if (onPositionChanged != null) {
       onPositionChanged(_position);
     }
@@ -35,7 +35,10 @@ class StemsPlayer {
     if (_status == PlayerState.STOPPED) {
       await Future.wait(tracks.map((t) => t.play()));
     } else {
-      await Future.wait(tracks.map((t) => t.resumeAt(_position)));
+      // Sync them first
+      await Future.wait(tracks.map((t) => t.seek(_position)));
+      // Then make them resume
+      await Future.wait(tracks.map((t) => t.resume()));
     }
     _status = PlayerState.PLAYING;
   }
@@ -50,8 +53,8 @@ class StemsPlayer {
     _status = PlayerState.STOPPED;
   }
 
-  Future<void> seek(int milliseconds) async {
-    await Future.wait(tracks.map((t) => t.seek(milliseconds)));
+  Future<void> seek(Duration position) async {
+    await Future.wait(tracks.map((t) => t.seek(position)));
     _status = PlayerState.STOPPED;
   }
 }
