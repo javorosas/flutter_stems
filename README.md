@@ -2,7 +2,7 @@
 
 A stems player implementation for the Flutter platform.
 
-![screenshot](screenshot.png | width=100)
+<img src="screenshot.png" width="100" alt="screenshot" />
 
 ## Stems what?
 
